@@ -295,7 +295,7 @@ public abstract class JSONWriter
      * {@link Feature#ReferenceDetection} feature flag - callers (typically the ASM-generated writers)
      * are expected to have checked it already.
      * <p>
-     * The class-level exclusion of {@link ObjectWriterProvider#isNotReferenceDetect(Class)} is still
+     * The class-level exclusion of {@link ObjectWriterProvider#isNotReferenceDetect0(Class)} is still
      * enforced here, and a null object is ignored, so that this method stays symmetric with
      * {@link #popPath0(Object)}: whatever is not pushed here is not popped there.
      *
@@ -305,7 +305,7 @@ public abstract class JSONWriter
      * or the object's class is excluded from reference detection
      */
     public final String setPath0(FieldWriter fieldWriter, Object object) {
-        if (object == null || ObjectWriterProvider.isNotReferenceDetect(object.getClass())) {
+        if (object == null || context.provider.isNotReferenceDetect0(object.getClass())) {
             return null;
         }
 
@@ -381,7 +381,7 @@ public abstract class JSONWriter
      * Sets the path for the specified object at the given index, without checking the
      * {@link Feature#ReferenceDetection} feature flag - callers are expected to have checked it already.
      * <p>
-     * The class-level exclusion of {@link ObjectWriterProvider#isNotReferenceDetect(Class)} is still
+     * The class-level exclusion of {@link ObjectWriterProvider#isNotReferenceDetect0(Class)} is still
      * enforced here, and a null object is ignored, so that this method stays symmetric with
      * {@link #popPath0(Object)}: whatever is not pushed here is not popped there.
      *
@@ -391,7 +391,7 @@ public abstract class JSONWriter
      * or the object's class is excluded from reference detection
      */
     public final String setPath0(int index, Object object) {
-        if (path == null || object == null || ObjectWriterProvider.isNotReferenceDetect(object.getClass())) {
+        if (path == null || object == null || context.provider.isNotReferenceDetect0(object.getClass())) {
             return null;
         }
         this.path = index == 0
@@ -437,7 +437,7 @@ public abstract class JSONWriter
      * <p>
      * It applies exactly the same exclusions as {@link #setPath0(FieldWriter, Object)} /
      * {@link #setPath0(int, Object)} - a null object and any class rejected by
-     * {@link ObjectWriterProvider#isNotReferenceDetect(Class)} are ignored - so a value that was never
+     * {@link ObjectWriterProvider#isNotReferenceDetect0(Class)} are ignored - so a value that was never
      * pushed is never popped.
      *
      * @param object the object to remove the path for
@@ -446,7 +446,7 @@ public abstract class JSONWriter
         if (this.path == null
                 || (context.features & MASK_REFERENCE_DETECTION) == 0
                 || object == null
-                || ObjectWriterProvider.isNotReferenceDetect(object.getClass())
+                || context.provider.isNotReferenceDetect0(object.getClass())
         ) {
             return;
         }
@@ -516,13 +516,13 @@ public abstract class JSONWriter
      * Checks if the ReferenceDetection feature is enabled for the specified object.
      *
      * @param object the object to check
-     * @return true if the ReferenceDetection feature is enabled and the object is not null and not a non-reference detect type, false otherwise
+     * @return true if the ReferenceDetection feature is enabled and the object is not null and not excluded from reference detection by the provider, false otherwise
      */
     public final boolean isRefDetect(Object object) {
         return (context.features & ReferenceDetection.mask) != 0
                 && (context.features & FieldInfo.DISABLE_REFERENCE_DETECT) == 0
                 && object != null
-                && !ObjectWriterProvider.isNotReferenceDetect(object.getClass());
+                && !context.provider.isNotReferenceDetect0(object.getClass());
     }
 
     /**

@@ -83,6 +83,7 @@ public class ObjectWriterProvider
     PropertyNamingStrategy namingStrategy;
 
     boolean disableReferenceDetect = JSONFactory.isDisableReferenceDetect();
+    boolean disableListReferenceDetect;
     boolean disableArrayMapping = JSONFactory.isDisableArrayMapping();
     boolean disableJSONB = JSONFactory.isDisableJSONB();
     boolean disableAutoType = JSONFactory.isDisableAutoType();
@@ -1029,6 +1030,27 @@ public class ObjectWriterProvider
     }
 
     /**
+     * Checks if the specified class is excluded from reference detection under this provider's
+     * configuration.
+     * <p>
+     * In addition to the class-level exclusions of {@link #isNotReferenceDetect(Class)}, this also
+     * excludes every {@link java.util.Collection} type when
+     * {@link #isDisableListReferenceDetect()} is enabled.
+     * <p>
+     * When collection reference detection is disabled, the circular-reference protection for
+     * collections is disabled as well: a collection that (directly or indirectly) references itself
+     * will be serialized recursively until a {@link StackOverflowError} is thrown. This option is
+     * disabled by default.
+     *
+     * @param clazz the class to check
+     * @return true if the class should not have reference detection, false otherwise
+     */
+    public boolean isNotReferenceDetect0(Class<?> clazz) {
+        return (disableListReferenceDetect && Collection.class.isAssignableFrom(clazz))
+                || isNotReferenceDetect(clazz);
+    }
+
+    /**
      * Clears all cached ObjectWriters and mixin mappings.
      *
      * @since 2.0.53
@@ -1145,6 +1167,15 @@ public class ObjectWriterProvider
     }
 
     /**
+     * Checks if reference detection is disabled for {@link java.util.Collection} values.
+     *
+     * @return true if collection reference detection is disabled, false otherwise
+     */
+    public boolean isDisableListReferenceDetect() {
+        return disableListReferenceDetect;
+    }
+
+    /**
      * Checks if auto-type support is disabled.
      *
      * @return true if auto-type support is disabled, false otherwise
@@ -1178,6 +1209,19 @@ public class ObjectWriterProvider
      */
     public void setDisableReferenceDetect(boolean disableReferenceDetect) {
         this.disableReferenceDetect = disableReferenceDetect;
+    }
+
+    /**
+     * Sets whether reference detection is disabled for {@link java.util.Collection} values.
+     * <p>
+     * Enabling this also disables the circular-reference protection for collections, so a
+     * self-referencing collection will recurse until a {@link StackOverflowError} is thrown.
+     * The default is {@code false}.
+     *
+     * @param disableListReferenceDetect true to disable collection reference detection, false to enable it
+     */
+    public void setDisableListReferenceDetect(boolean disableListReferenceDetect) {
+        this.disableListReferenceDetect = disableListReferenceDetect;
     }
 
     /**
